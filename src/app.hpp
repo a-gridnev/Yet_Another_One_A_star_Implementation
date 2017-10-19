@@ -3,7 +3,7 @@
 
 #include "node.hpp"
 #include "graph.hpp"
-#include "graph_visualizer.hpp"
+#include "visualizer.hpp"
 #include "a_star.hpp"
 #include "ui.hpp"
 
@@ -18,7 +18,7 @@ private:
     sf::RenderWindow _window;
 
     Graph<Node<int>> _grid;
-    Graph_visualizer _visualizer;
+    Visualizer       _visualizer;
     UI               _ui;
     A_star           _a_star;
 

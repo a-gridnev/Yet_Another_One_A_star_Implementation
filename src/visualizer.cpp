@@ -1,6 +1,6 @@
-#include "graph_visualizer.hpp"
+#include "Visualizer.hpp"
 
-Graph_visualizer::Graph_visualizer(Graph<Node<int>>& graph,
+Visualizer::Visualizer(Graph<Node<int>>& graph,
                                    sf::RenderWindow& target,
                                    A_star& algoritm):
     _graph(graph),
@@ -13,7 +13,7 @@ Graph_visualizer::Graph_visualizer(Graph<Node<int>>& graph,
     }
 }
 
-void Graph_visualizer::init()
+void Visualizer::init()
 {
     // Cell
     // for window(800,800) and graph(11) -> gap = 4
@@ -34,7 +34,7 @@ void Graph_visualizer::init()
     _cellText.setColor(sf::Color::White);
 }
 
-void Graph_visualizer::render()
+void Visualizer::render()
 {
     // Draw base layer
     _target.draw(sf::Sprite(_baseTexture.getTexture()));
@@ -86,13 +86,13 @@ void Graph_visualizer::render()
     draw(_graph.goal(), CellType::Stop);  
 }
 
-void Graph_visualizer::draw(const iNode* cell,
+void Visualizer::draw(const iNode* cell,
                             const CellType type)
 {
     draw(_target, cell, type);
 }
 
-void Graph_visualizer::draw(sf::RenderTarget& target,
+void Visualizer::draw(sf::RenderTarget& target,
                             const iNode* cell,
                             const CellType type)
 {
@@ -106,7 +106,7 @@ void Graph_visualizer::draw(sf::RenderTarget& target,
     target.draw(_cell);
 }
 
-void Graph_visualizer::drawWeight(sf::RenderTarget& target,
+void Visualizer::drawWeight(sf::RenderTarget& target,
                                   const iNode* node,
                                   const double value)
 {
@@ -129,7 +129,7 @@ void Graph_visualizer::drawWeight(sf::RenderTarget& target,
     _target.draw(_cellText);
 }
 
-void Graph_visualizer::drawBase(sf::RenderTarget& target)
+void Visualizer::drawBase(sf::RenderTarget& target)
 {
     for(auto row: _graph.data())
     {
@@ -140,7 +140,7 @@ void Graph_visualizer::drawBase(sf::RenderTarget& target)
     }    
 }
 
-sf::Vector2i Graph_visualizer::getCellCoord(const sf::Vector2i& coord) const
+sf::Vector2i Visualizer::getCellCoord(const sf::Vector2i& coord) const
 {
     if(isPointToCell(coord))
     {
@@ -156,7 +156,7 @@ sf::Vector2i Graph_visualizer::getCellCoord(const sf::Vector2i& coord) const
     return(sf::Vector2i(-1,-1));
 }
 
-bool Graph_visualizer::isPointToCell(const sf::Vector2i& coord) const
+bool Visualizer::isPointToCell(const sf::Vector2i& coord) const
 {
     return(coord.x%(static_cast<int>(_cellSize) + _gap) < static_cast<int>(_cellSize) &&
            coord.y%(static_cast<int>(_cellSize) + _gap) < static_cast<int>(_cellSize));   

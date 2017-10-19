@@ -13,7 +13,7 @@
 #include <unordered_map>
 
 
-class Graph_visualizer
+class Visualizer
 {
 public:
     enum class CoordSystem
@@ -64,7 +64,7 @@ private:
     };
 
 public:
-    Graph_visualizer(Graph<Node<int>>&, sf::RenderWindow&, A_star&);
+    Visualizer(Graph<Node<int>>&, sf::RenderWindow&, A_star&);
 
     void init();
 
