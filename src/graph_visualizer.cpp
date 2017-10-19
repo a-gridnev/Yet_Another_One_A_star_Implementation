@@ -1,49 +1,58 @@
 #include "graph_visualizer.hpp"
-#include <string>
-#include <limits>
 
-Graph_visualizer::Graph_visualizer(Graph<Node<int>>& graph, sf::RenderWindow& target, A_star& algoritm):
+Graph_visualizer::Graph_visualizer(Graph<Node<int>>& graph,
+                                   sf::RenderWindow& target,
+                                   A_star& algoritm):
     _graph(graph),
     _target(target),
     _a_star(algoritm)
 {
-    _font.loadFromFile("DroidSans.ttf");
+    if(!_font.loadFromFile("DroidSans.ttf"))
+    {
+        // TODO: add validation
+    }
 }
 
 void Graph_visualizer::init()
 {
-    // REAL value for final application (uncomment this)
+    // Cell
     // for window(800,800) and graph(11) -> gap = 4
     _gap = _target.getSize().x/((_graph.size()-1)*10*2);
-    
-    // TEMP value for test cell detection algoritm (isPointToCell)
-    // _gap = 20;
-    _cellSize = static_cast<float>(_target.getSize().x - _gap*(_graph.size()-1))/_graph.size();
+    _cellSize = static_cast<float>(_target.getSize().x -
+                                   _gap*(_graph.size()-1))/_graph.size();
+
     _cell.setSize(sf::Vector2f(_cellSize,_cellSize));
 
+    // Base layer
     _baseTexture.create(_target.getSize().x, _target.getSize().y);
+    
     drawBase(_baseTexture);
+
+    // Cell Text
+    _cellText.setFont(_font);
+    _cellText.setCharacterSize(static_cast<unsigned int>(_cellSize/2));
+    _cellText.setColor(sf::Color::White);
 }
 
 void Graph_visualizer::render()
 {
-    // Draw field
-    _target.draw(sf::Sprite(_baseTexture .getTexture()));
+    // Draw base layer
+    _target.draw(sf::Sprite(_baseTexture.getTexture()));
 
     // Draw algorithm data
     _a_star.lock(); // lock mutex ->
 
-    for(auto element: _a_star.cameFrom())
+    for(auto& element: _a_star.cameFrom())
     {
         draw(element.first, CellType::Visited);
     }
 
-    for(auto element: _a_star.frontier())
+    for(auto& element: _a_star.frontier())
     {
         draw(element.second, CellType::Frontier);
     }
 
-    for(auto element: _a_star.path())
+    for(auto& element: _a_star.path())
     {
         draw(element, CellType::Path);
     }
@@ -58,17 +67,16 @@ void Graph_visualizer::render()
         draw(_a_star.goalNode(), CellType::Stop_shadow);
     }
 
-// TEMP ->
+    // Draw nodes weight
     for(auto& element: _a_star.nodeCost())
     {
         drawWeight(_target, element.first, element.second);
     }   
-// TEMP <-
 
     _a_star.unlock(); // lock mutex <-
 
     // Draw wall
-    for(auto element: _graph.wall().get())
+    for(auto& element: _graph.wall().get())
     {
         draw(element, CellType::Wall);
     }
@@ -78,78 +86,47 @@ void Graph_visualizer::render()
     draw(_graph.goal(), CellType::Stop);  
 }
 
-void Graph_visualizer::draw(const iNode* cell, CellType type)
+void Graph_visualizer::draw(const iNode* cell,
+                            const CellType type)
 {
     draw(_target, cell, type);
 }
 
-void Graph_visualizer::draw(sf::RenderTarget& target, const iNode* cell, CellType type)
+void Graph_visualizer::draw(sf::RenderTarget& target,
+                            const iNode* cell,
+                            const CellType type)
 {
-    sf::Color color;
-    switch(type)
-    {
-        case(CellType::Empty):
-            color = sf::Color::White;
-            break;
-        case(CellType::Wall):
-            color = sf::Color::Black;
-            break;
-        case(CellType::Start):
-            color = sf::Color::Green;
-            break;
-        case(CellType::Stop):
-            color = sf::Color::Red;
-            break;
-        case(CellType::Start_shadow):
-            color = sf::Color(0,255,0,125);
-            break;
-        case(CellType::Stop_shadow):
-            color = sf::Color(255,0,0,125);
-            break;
-        case(CellType::Frontier):
-            color = sf::Color::Blue;
-            break;
-        case(CellType::Visited):
-            color = sf::Color::Cyan;
-            break;
-        case(CellType::Path):
-            color = sf::Color(125,125,125);
-            break;
-    }
-    _cell.setFillColor(color);
+    _cell.setFillColor(CellColor[type]);
 
     float x = (_cellSize + _gap)*cell->x;
     float y = (_cellSize + _gap)*cell->y;
 
     _cell.setPosition(x,y);
-    target.draw(_cell);
 
-    _cell.setFillColor(sf::Color::White);
+    target.draw(_cell);
 }
 
-void Graph_visualizer::drawWeight(sf::RenderTarget& target, const iNode* node, const double value)
+void Graph_visualizer::drawWeight(sf::RenderTarget& target,
+                                  const iNode* node,
+                                  const double value)
 {
     float x = (_cellSize + _gap)*node->x;
     float y = (_cellSize + _gap)*node->y;   
 
     std::string valueText;
-    value != std::numeric_limits<double>::max()? valueText = std::to_string(static_cast<int>(value)) :
-                                                 valueText = '-';
+    value != std::numeric_limits<double>::max()?
+                valueText = std::to_string(static_cast<int>(value)) :
+                valueText = '-';
 
-    sf::Text text(valueText, _font);
+    _cellText.setString(valueText);
 
-// TEMP
-    text.setCharacterSize(14);
-// TEMP
-    // text.setCharacterSize(static_cast<unsigned int>(_cellSize/2));
-    text.setColor(sf::Color::White);
+    sf::FloatRect textRect = _cellText.getLocalBounds();
+    _cellText.setOrigin(textRect.left +textRect.width/2.0f,
+                        textRect.top  +textRect.height/2.0f);  
 
-    sf::FloatRect textRect = text.getLocalBounds();
-    text.setOrigin(textRect.left +textRect.width/2.0f,
-                   textRect.top  +textRect.height/2.0f);    
-    text.setPosition(x + _cellSize/2.0f, y + _cellSize/2.0f);
+    _cellText.setPosition(x + _cellSize/2.0f, y + _cellSize/2.0f);
 
-    _target.draw(text);
+    _target.draw(_cellText);
 }
 
 void Graph_visualizer::drawBase(sf::RenderTarget& target)
@@ -158,18 +135,12 @@ void Graph_visualizer::drawBase(sf::RenderTarget& target)
     {
         for(auto cell: row)
         {
-            draw(_baseTexture, &cell);
+            draw(target, &cell);
         }
     }    
 }
 
-bool Graph_visualizer::isPointToCell(sf::Vector2i& coord)
-{
-    return(coord.x%(static_cast<int>(_cellSize) + _gap) < static_cast<int>(_cellSize) &&
-           coord.y%(static_cast<int>(_cellSize) + _gap) < static_cast<int>(_cellSize));   
-}
-
-sf::Vector2i Graph_visualizer::getCellCoord(sf::Vector2i coord)
+sf::Vector2i Graph_visualizer::getCellCoord(const sf::Vector2i& coord) const
 {
     if(isPointToCell(coord))
     {
@@ -183,4 +154,10 @@ sf::Vector2i Graph_visualizer::getCellCoord(sf::Vector2i coord)
     }
 
     return(sf::Vector2i(-1,-1));
+}
+
+bool Graph_visualizer::isPointToCell(const sf::Vector2i& coord) const
+{
+    return(coord.x%(static_cast<int>(_cellSize) + _gap) < static_cast<int>(_cellSize) &&
+           coord.y%(static_cast<int>(_cellSize) + _gap) < static_cast<int>(_cellSize));   
 }

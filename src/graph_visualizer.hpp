@@ -8,6 +8,9 @@
 #include <SFML/Graphics.hpp>
 
 #include <cmath>
+#include <limits>
+#include <string>
+#include <unordered_map>
 
 
 class Graph_visualizer
@@ -21,17 +24,18 @@ public:
 
 private:
     Graph<Node<int>>& _graph;
-    A_star& _a_star;
     sf::RenderWindow& _target;
+    A_star& _a_star;
+
+    sf::RenderTexture _baseTexture;
+
+    sf::Font _font;
+    sf::Text _cellText;
 
     sf::RectangleShape _cell;
 
     float _cellSize;
     int _gap;
-
-    sf::RenderTexture _baseTexture;
-
-    sf::Font _font;
 
     enum class CellType
     {
@@ -46,20 +50,41 @@ private:
         Path
     };
 
+    std::unordered_map<CellType, sf::Color>  CellColor =
+    {
+        {CellType::Empty,       sf::Color::White},
+        {CellType::Wall,        sf::Color::Black},
+        {CellType::Start,       sf::Color::Green},
+        {CellType::Stop,        sf::Color::Red},
+        {CellType::Start_shadow,sf::Color(0,255,0,125)},
+        {CellType::Stop_shadow, sf::Color(255,0,0,125)},
+        {CellType::Frontier,    sf::Color::Blue},
+        {CellType::Visited,     sf::Color::Cyan},
+        {CellType::Path,        sf::Color(125,125,125)}
+    };
+
 public:
     Graph_visualizer(Graph<Node<int>>&, sf::RenderWindow&, A_star&);
 
     void init();
 
+
     void render();
 
-    void draw(const iNode*, CellType=CellType::Empty);
-    void draw(sf::RenderTarget&, const iNode*, CellType=CellType::Empty);
+    void draw(const iNode*,
+              const CellType=CellType::Empty);
+    void draw(sf::RenderTarget&,
+              const iNode*,
+              const CellType=CellType::Empty);
 
-    void drawWeight(sf::RenderTarget& target, const iNode*, const double value);
     void drawBase(sf::RenderTarget&);
 
-    sf::Vector2i getCellCoord(sf::Vector2i);
+    void drawWeight(sf::RenderTarget& target,
+                    const iNode*,
+                    const double value);
 
-    bool isPointToCell(sf::Vector2i&);
+
+    bool isPointToCell(const sf::Vector2i&) const;
+
+    sf::Vector2i getCellCoord(const sf::Vector2i&) const;
 };
